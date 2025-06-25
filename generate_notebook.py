@@ -1,0 +1,218 @@
+import json
+
+notebook_content = {
+    "cells": [
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import pandas as pd\n",
+                "from sklearn.model_selection import train_test_split\n",
+                "from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier\n",
+                "from sklearn.metrics import accuracy_score, classification_report\n",
+                "from sklearn.preprocessing import LabelEncoder, StandardScaler\n",
+                "import pickle"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Load the dataset\n",
+                "df = pd.read_csv(\"/home/ubuntu/upload/ObesityDataSet2.csv\")"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Display basic information and first few rows\n",
+                "print(df.info())\n",
+                "print(df.head())"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Handle missing values: Drop rows with any NaN values\n",
+                "df.dropna(inplace=True)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Preprocessing: Handle categorical variables\n",
+                "# Identify categorical columns\n",
+                "categorical_cols = df.select_dtypes(include=\'object\').columns\n",
+                "\n",
+                "# Apply Label Encoding to categorical columns\n",
+                "label_encoders = {}\n",
+                "for col in categorical_cols:\n",
+                "    le = LabelEncoder()\n",
+                "    df[col] = le.fit_transform(df[col])\n",
+                "    label_encoders[col] = le\n",
+                "\n",
+                "# Save the label encoder for the target variable (NObeyesdad) if needed for inverse transformation\n",
+                "target_label_encoder = label_encoders[\"NObeyesdad\"]"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Define features (X) and target (y)\n",
+                "X = df.drop(\'NObeyesdad\', axis=1)\n",
+                "y = df[\"NObeyesdad\"]"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Split the data into training and testing sets\n",
+                "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Scale numerical features (optional but good practice for some models)\n",
+                "scaler = StandardScaler()\n",
+                "X_train_scaled = scaler.fit_transform(X_train)\n",
+                "X_test_scaled = scaler.transform(X_test)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Model 1: Random Forest Classifier\n",
+                "rf_model = RandomForestClassifier(n_estimators=100, random_state=42)\n",
+                "rf_model.fit(X_train_scaled, y_train)\n",
+                "\n",
+                "# Predictions\n",
+                "y_pred_rf = rf_model.predict(X_test_scaled)\n",
+                "\n",
+                "# Evaluate\n",
+                "print(\"Random Forest Classifier Performance:\")\n",
+                "print(f\"Accuracy: {accuracy_score(y_test, y_pred_rf):.4f}\")\n",
+                "print(\"Classification Report:\")\n",
+                "print(classification_report(y_test, y_pred_rf))"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Model 2: Gradient Boosting Classifier\n",
+                "gb_model = GradientBoostingClassifier(n_estimators=100, random_state=42)\n",
+                "gb_model.fit(X_train_scaled, y_train)\n",
+                "\n",
+                "# Predictions\n",
+                "y_pred_gb = gb_model.predict(X_test_scaled)\n",
+                "\n",
+                "# Evaluate\n",
+                "print(\"\\nGradient Boosting Classifier Performance:\")\n",
+                "print(f\"Accuracy: {accuracy_score(y_test, y_pred_gb):.4f}\")\n",
+                "print(\"Classification Report:\")\n",
+                "print(classification_report(y_test, y_pred_gb))"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Compare and select the best model\n",
+                "# For simplicity, we\\'ll choose the one with higher accuracy on the test set\n",
+                "# In a real scenario, cross-validation and other metrics would be considered\n",
+                "\n",
+                "if accuracy_score(y_test, y_pred_rf) > accuracy_score(y_test, y_pred_gb):\n",
+                "    best_model = rf_model\n",
+                "    model_name = \"Random Forest\"\n",
+                "else:\n",
+                "    best_model = gb_model\n",
+                "    model_name = \"Gradient Boosting\"\n",
+                "\n",
+                "print(f\"\\nBest model selected: {model_name}\")"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": None,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# Save the best model, scaler, and target_label_encoder\n",
+                "# It\\'s crucial to save the scaler and label encoder to preprocess new data consistently\n",
+                "\n",
+                "model_filename = \"best_obesity_model.pkl\"\n",
+                "scaler_filename = \"scaler.pkl\"\n",
+                "target_encoder_filename = \"target_label_encoder.pkl\"\n",
+                "\n",
+                "with open(model_filename, \'wb\') as file:\n",
+                "    pickle.dump(best_model, file)\n",
+                "\n",
+                "with open(scaler_filename, \'wb\') as file:\n",
+                "    pickle.dump(scaler, file)\n",
+                "\n",
+                "with open(target_encoder_filename, \'wb\') as file:\n",
+                "    pickle.dump(target_label_encoder, file)\n",
+                "\n",
+                "print(f\"Best model saved as {model_filename}\")\n",
+                "print(f\"Scaler saved as {scaler_filename}\")\n",
+                "print(f\"Target Label Encoder saved as {target_encoder_filename}\")"
+            ]
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.11.0rc1"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 4
+}
+
+with open("obesity_prediction_model.ipynb", "w") as f:
+    json.dump(notebook_content, f, indent=2)
+
+
