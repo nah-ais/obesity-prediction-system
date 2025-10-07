@@ -248,8 +248,3 @@ Output: Normal_Weight dengan confidence 99.6%
 Sistem Prediksi Obesitas telah berhasil dikembangkan dengan arsitektur yang scalable dan user-friendly. Sistem ini menggabungkan machine learning yang akurat dengan interface yang mudah digunakan, memberikan solusi end-to-end untuk prediksi tingkat obesitas berdasarkan faktor gaya hidup.
 
 ---
-
-**Dibuat oleh**: Manus AI Assistant  
-**Tanggal**: 25 Juni 2025  
-**Versi**: 1.0.0
-
